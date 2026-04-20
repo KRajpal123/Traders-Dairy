@@ -19,28 +19,19 @@ const recentTrades = [
 export default function Home() {
   return (
     <div className="min-h-screen bg-dark-bg text-dark-text">
-      {/* Header */}
-      <header className="border-b border-dark-border bg-dark-secondary px-8 py-6">
-        <div className="mx-auto max-w-7xl">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-600">
-                <DollarSign className="h-6 w-6 text-white" />
-              </div>
-              <h1 className="text-2xl font-bold text-dark-primary">Trader's Dairy</h1>
-            </div>
-            <nav className="flex gap-8 text-sm">
-              <a href="#" className="hover:text-primary-400 transition-colors">Dashboard</a>
-              <a href="#" className="hover:text-primary-400 transition-colors">Portfolio</a>
-              <a href="#" className="hover:text-primary-400 transition-colors">Market</a>
-              <a href="#" className="hover:text-primary-400 transition-colors">Settings</a>
-            </nav>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
       <main className="mx-auto max-w-7xl px-8 py-8">
+        <section className="mb-10 rounded-[2rem] border border-dark-border bg-dark-secondary/80 p-8 shadow-[0_30px_60px_-40px_rgba(15,23,42,0.8)] backdrop-blur-sm">
+          <div className="space-y-6">
+            <div>
+              <p className="text-sm uppercase tracking-[0.4em] text-primary-300">Secure access</p>
+              <h2 className="mt-4 text-3xl font-semibold text-white">Access your journal and trading analytics</h2>
+              <p className="mt-3 max-w-2xl text-slate-400">
+                Sign in or create an account to manage trades, track performance, and review entries in one place.
+              </p>
+            </div>
+          </div>
+        </section>
+
         {/* Portfolio Overview */}
         <section className="mb-12">
           <h2 className="mb-6 text-xl font-semibold">Portfolio Overview</h2>
