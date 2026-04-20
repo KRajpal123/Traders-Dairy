@@ -1,8 +1,9 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #0f172a;
+  --foreground: #e2e8f0;
+  color-scheme: dark;
 }
 
 @theme inline {
@@ -12,15 +13,80 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Dark Mode Optimized Base Styles */
+html {
+  background-color: #0f172a;
+  color: #e2e8f0;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: #0f172a;
+  color: #e2e8f0;
+  transition: background-color 200ms, color 200ms;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 0.5rem;
+  height: 0.5rem;
+}
+
+::-webkit-scrollbar-track {
+  background-color: #1e293b;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #475569;
+  border-radius: 0.25rem;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #737373;
+}
+
+/* Selection Color */
+::selection {
+  background-color: #0284c7;
+  color: white;
+}
+
+/* Trading App Specific Styles */
+.profit-text {
+  color: #4ade80;
+}
+
+.loss-text {
+  color: #f87171;
+}
+
+.profit-bg {
+  background-color: #145231;
+}
+
+.loss-bg {
+  background-color: #5a0f0f;
+}
+
+.card-dark {
+  background-color: #1e293b;
+  border: 1px solid #475569;
+  border-radius: 0.5rem;
+}
+
+.input-dark {
+  background-color: #334155;
+  border: 1px solid #475569;
+  color: #e2e8f0;
+  border-radius: 0.25rem;
+  padding: 0.5rem 0.75rem;
+  transition: outline 200ms;
+}
+
+.input-dark::placeholder {
+  color: #cbd5e1;
+}
+
+.input-dark:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px #0284c7;
 }
