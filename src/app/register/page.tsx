@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 const initialErrors = {
@@ -15,6 +16,8 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [errors, setErrors] = useState(initialErrors);
   const [success, setSuccess] = useState('');
+
+  const router = useRouter();
 
   const validate = () => {
     const nextErrors = { ...initialErrors };
@@ -46,8 +49,8 @@ export default function RegisterPage() {
     event.preventDefault();
 
     if (validate()) {
-      setSuccess('Account created successfully. Redirecting to login...');
       setErrors(initialErrors);
+      router.push('/login');
     } else {
       setSuccess('');
     }

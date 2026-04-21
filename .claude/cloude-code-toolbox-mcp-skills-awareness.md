@@ -1,6 +1,6 @@
 # Cloude Code ToolBox — MCP & Skills awareness
 
-_Generated: 2026-04-20T11:58:40.826Z_
+_Generated: 2026-04-21T06:07:55.052Z_
 
 ## How to use this report
 
@@ -15,7 +15,7 @@ _Generated: 2026-04-20T11:58:40.826Z_
 
 Workspace `mcp.json` _(folder: Traders-Dairy)_
 
-- **c:\Users\admin\Desktop\Trader-dairy-frontend\Traders-Dairy\.vscode\mcp.json** — _File missing_
+- **c:\Users\admin\Desktop\Traders-Dairy\.vscode\mcp.json** — _File missing_
 
 _No active workspace servers in mcp.json._
 

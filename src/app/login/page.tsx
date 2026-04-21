@@ -1,7 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useAuth, getAuthToken } from '@/hooks/useAuth';
 
 const initialErrors = {
   email: '',
@@ -13,6 +15,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState(initialErrors);
   const [success, setSuccess] = useState('');
+
+  const router = useRouter();
 
   const validate = () => {
     const nextErrors = { ...initialErrors };
@@ -38,12 +42,21 @@ export default function LoginPage() {
     event.preventDefault();
 
     if (validate()) {
-      setSuccess('Login successful. Redirecting to your dashboard...');
       setErrors(initialErrors);
+      router.push('/dashboard');
     } else {
       setSuccess('');
     }
   };
+
+  const { login } = useAuth();
+
+  useEffect(() => {
+    const token = getAuthToken();
+    if (token) {
+      router.push('/dashboard');
+    }
+  }, [router]);
 
   return (
     <main className="min-h-screen bg-slate-950 text-slate-50 px-4 py-10 sm:px-6 lg:px-8">
