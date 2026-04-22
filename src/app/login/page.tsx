@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { useAuth, getAuthToken } from '@/hooks/useAuth';
+import { getAuthToken, setAuthToken } from '@/hooks/useAuth';
 
 const initialErrors = {
   email: '',
@@ -42,14 +42,23 @@ export default function LoginPage() {
     event.preventDefault();
 
     if (validate()) {
-      setErrors(initialErrors);
-      router.push('/dashboard');
+      // Check users from localStorage
+      const users = JSON.parse(localStorage.getItem('users') || '[]');
+      const user = users.find((u: {email: string; password: string}) => u.email === email && u.password === password);
+      
+      if (user) {
+        // Login success - set token
+        setAuthToken(email);
+        router.push('/dashboard');
+      } else {
+        setErrors({ ...initialErrors, email: 'Invalid email or password' });
+      }
     } else {
       setSuccess('');
     }
   };
 
-  const { login } = useAuth();
+  // Removed unused useAuth
 
   useEffect(() => {
     const token = getAuthToken();

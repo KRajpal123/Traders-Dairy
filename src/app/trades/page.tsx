@@ -8,11 +8,10 @@ import { getAuthToken } from '@/hooks/useAuth';
 export default function TradesPage() {
   const router = useRouter();
 
+  const [isAuthenticated, setIsAuthenticated] = useState(true);
   useEffect(() => {
-    if (!getAuthToken()) {
-      return;
-    }
-  }, [router]);
+    setIsAuthenticated(!!getAuthToken());
+  }, []);
 
   interface FormData {
     type: 'BUY' | 'SELL';

@@ -20,11 +20,10 @@ interface Trade {
 export default function DashboardPage() {
   const router = useRouter();
 
+  const [isAuthenticated, setIsAuthenticated] = useState(true);
   useEffect(() => {
-    if (!getAuthToken()) {
-      return;
-    }
-  }, [router]);
+    setIsAuthenticated(!!getAuthToken());
+  }, []);
 
   const [trades, setTrades] = useState<Trade[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -53,15 +52,14 @@ export default function DashboardPage() {
   }, [trades]);
 
   const renderTrades = () => {
-    if (trades.length === 0) {
+  if (trades.length === 0 && isAuthenticated) {
       return (
         <tr>
-          <td colSpan={6} className="p-12 text-center py-20">
+          <td colSpan={7} className="p-12 text-center py-20">
             <div className="text-slate-400">
-              <p className="text-xl mb-4">No trades yet</p>
-              <p className="mb-6">Please login to check the data</p>
+              <p className="text-xl mb-4 font-semibold">NO TRADES ADDED YET</p>
               <a href="/trades" className="inline-flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300">
-                Add First Trade
+                ADD TRADE
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8 -8H4" />
                 </svg>

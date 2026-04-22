@@ -49,8 +49,17 @@ export default function RegisterPage() {
     event.preventDefault();
 
     if (validate()) {
-      setErrors(initialErrors);
-      router.push('/login');
+      // Store user in localStorage (users array)
+      const users = JSON.parse(localStorage.getItem('users') || '[]');
+      const newUser = { email, password };
+      if (!users.find((u: any) => u.email === email)) {
+        users.push(newUser);
+        localStorage.setItem('users', JSON.stringify(users));
+        setSuccess('Account created! Please login.');
+        setTimeout(() => router.push('/login'), 1500);
+      } else {
+        setErrors({ ...initialErrors, email: 'User already exists' });
+      }
     } else {
       setSuccess('');
     }
