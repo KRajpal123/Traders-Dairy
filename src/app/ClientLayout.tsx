@@ -39,6 +39,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
             <nav className="flex flex-wrap items-center gap-4 text-sm text-slate-300">
               <Link href="/dashboard" className="transition hover:text-white">Dashboard</Link>
               <Link href="/trades" className="transition hover:text-white">Trades</Link>
+              <Link href="/analytics" className="transition hover:text-white">Analytics</Link>
               {isAuth ? (
                 <div className="relative">
                   <button 
