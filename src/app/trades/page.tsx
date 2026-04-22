@@ -10,8 +10,7 @@ export default function TradesPage() {
 
   useEffect(() => {
     if (!getAuthToken()) {
-      router.push('/login');
-      router.refresh();
+      return;
     }
   }, [router]);
 
@@ -37,7 +36,7 @@ export default function TradesPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const validateForm = () => {
-    const newErrors = {};
+const newErrors: Record<string, string> = {};
     if (!formData.symbol.trim()) newErrors.symbol = 'Stock name is required';
     if (!formData.entryPrice || isNaN(Number(formData.entryPrice))) newErrors.entryPrice = 'Valid entry price required';
     if (!formData.exitPrice || isNaN(Number(formData.exitPrice))) newErrors.exitPrice = 'Valid exit price required';
@@ -51,7 +50,36 @@ export default function TradesPage() {
     e.preventDefault();
     if (validateForm()) {
       // Add trade logic here
-      console.log('New trade:', formData);
+      // Calculate PnL
+      const entry = Number(formData.entryPrice);
+      const exit = Number(formData.exitPrice);
+      const qty = Number(formData.quantity);
+      const priceDiff = Math.abs(exit - entry);
+      const points = priceDiff.toFixed(1);
+      const directionProfit = formData.type === 'BUY' ? (exit > entry) : (entry > exit);
+      const pnlValue = directionProfit ? priceDiff * qty : - (priceDiff * qty);
+      const pnlStr = (pnlValue >= 0 ? '+' : '-') + '₹' + Math.abs(pnlValue).toLocaleString();
+      const isPositive = pnlValue >= 0;
+      const pointsStr = points;
+      
+        const newTrade = {
+        symbol: formData.symbol.toUpperCase(),
+        action: formData.type,
+        entryPrice: formData.entryPrice,
+        exitPrice: formData.exitPrice,
+        quantity: formData.quantity,
+        date: formData.date,
+        notes: formData.notes,
+        pnl: pnlStr,
+        points: pointsStr,
+        isPositive
+      };
+      
+      // Save to localStorage
+      const trades = JSON.parse(localStorage.getItem('trades') || '[]');
+      trades.unshift(newTrade);
+      localStorage.setItem('trades', JSON.stringify(trades.slice(0,100))); // Keep last 100
+      
       alert('Trade added successfully!');
       // Reset form
       setFormData({
