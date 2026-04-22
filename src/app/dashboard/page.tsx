@@ -37,7 +37,7 @@ export default function DashboardPage() {
 
   const totalPnL = useMemo(() => {
     return trades.reduce((sum, trade) => {
-      const pnlValue = trade.pnl.replace(/[+$₹]/g, '');
+      const pnlValue = trade.pnl.replace(/[^0-9.-]/g, '');
       return sum + parseFloat(pnlValue);
     }, 0);
   }, [trades]);
