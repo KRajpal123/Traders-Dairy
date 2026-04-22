@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { toast } from 'sonner';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useTrades } from '@/context/TradesContext';
 
@@ -26,6 +27,16 @@ export default function DashboardPage() {
     return (wins / trades.length) * 100;
   }, [trades]);
 
+  const formatTradeDate = (date: string) => {
+    const [year, month, day] = date.split('-');
+
+    if (!year || !month || !day) {
+      return date;
+    }
+
+    return `${day}-${month}-${year}`;
+  };
+
   const renderTrades = () => {
     if (trades.length === 0) {
       return (
@@ -50,9 +61,10 @@ export default function DashboardPage() {
   return currentTrades.map((trade, index) => {
         const displayPoints = trade.points || Math.abs(parseFloat(trade.exitPrice || '0') - parseFloat(trade.entryPrice || '0')).toFixed(1);
         const formattedPoints = (trade.isPositive ? '+' : '-') + displayPoints;
+        const tradeIndex = indexOfFirstTrade + index;
       return (
         <tr key={index} className="border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors">
-          <td className="p-6">{trade.date}</td>
+          <td className="p-6">{formatTradeDate(trade.date)}</td>
           <td className="p-6 font-mono">{trade.symbol}</td>
           <td className="p-6">
             <span className={`px-3 py-1 text-sm font-medium rounded-full ${
@@ -75,10 +87,24 @@ export default function DashboardPage() {
           <td className="p-6">
             <button
               onClick={() => {
-                if (confirm('Delete this trade?')) {
-                  deleteTrade(indexOfFirstTrade + index);
-                  setCurrentPage(1);
-                }
+                const toastId = toast('Do you want to delete this trade?', {
+                  description: `${trade.symbol} on ${formatTradeDate(trade.date)}`,
+                  action: {
+                    label: 'Delete',
+                    onClick: () => {
+                      deleteTrade(tradeIndex);
+                      setCurrentPage(1);
+                      toast.success('Trade deleted successfully.');
+                    },
+                  },
+                  cancel: {
+                    label: 'Cancel',
+                    onClick: () => {
+                      toast.dismiss(toastId);
+                    },
+                  },
+                  duration: 8000,
+                });
               }}
               className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-all duration-200"
               title="Delete trade"

@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import { useState } from 'react';
+import { Toaster } from 'sonner';
 import { TradesProvider } from '@/context/TradesContext';
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
@@ -73,6 +74,17 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
           </div>
         </header>
         <main className="flex-1">{children}</main>
+        <Toaster
+          position="top-right"
+          richColors
+          toastOptions={{
+            style: {
+              background: '#0f172a',
+              border: '1px solid rgba(51, 65, 85, 0.9)',
+              color: '#e2e8f0',
+            },
+          }}
+        />
       </div>
     </TradesProvider>
   );

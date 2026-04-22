@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import type { FormEvent } from 'react';
+import { toast } from 'sonner';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useTrades, type Trade } from '@/context/TradesContext';
 
@@ -66,7 +67,7 @@ export default function TradesPage() {
       };
       
       addTrade(newTrade);
-      alert('Trade added successfully!');
+      toast.success('Trade added successfully.');
       // Reset form
       setFormData({
         type: 'BUY',
