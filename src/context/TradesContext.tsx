@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useReducer, ReactNode } from 'react';
 
-interface Trade {
+export interface Trade {
   symbol: string;
   action: string;
   entryPrice: string;

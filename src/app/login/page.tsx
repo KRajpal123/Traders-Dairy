@@ -1,9 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { useAuth, getAuthToken } from '@/hooks/useAuth';
+import { validateUserCredentials } from '@/utils/authStorage';
 
 const initialErrors = {
   email: '',
@@ -17,6 +18,8 @@ export default function LoginPage() {
   const [success, setSuccess] = useState('');
 
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const accessMessage = searchParams.get('message') ?? '';
 
   const validate = () => {
     const nextErrors = { ...initialErrors };
@@ -42,7 +45,19 @@ export default function LoginPage() {
     event.preventDefault();
 
     if (validate()) {
+      const result = validateUserCredentials(email, password);
+
+      if (!result.ok) {
+        setErrors({
+          ...initialErrors,
+          password: result.message,
+        });
+        setSuccess('');
+        return;
+      }
+
       setErrors(initialErrors);
+      login(result.email);
       router.push('/dashboard');
     } else {
       setSuccess('');
@@ -85,6 +100,12 @@ export default function LoginPage() {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6 rounded-3xl bg-slate-950/90 p-6 sm:p-8">
+              {accessMessage ? (
+                <p className="rounded-2xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
+                  {accessMessage}
+                </p>
+              ) : null}
+
               <div className="space-y-2">
                 <label htmlFor="email" className="text-sm font-medium text-slate-300">
                   Email address

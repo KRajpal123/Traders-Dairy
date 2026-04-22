@@ -1,32 +1,10 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { getAuthToken } from '@/hooks/useAuth';
+import { useMemo, useState } from 'react';
+import ProtectedRoute from '@/components/ProtectedRoute';
 import { useTrades } from '@/context/TradesContext';
 
-interface Trade {
-  symbol: string;
-  action: string;
-  entryPrice: string;
-  exitPrice: string;
-  quantity: string;
-  date: string;
-  notes?: string;
-  pnl: string;
-  points: string;
-  isPositive: boolean;
-}
-
 export default function DashboardPage() {
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!getAuthToken()) {
-      return;
-    }
-  }, [router]);
-
   const { trades, deleteTrade } = useTrades();
   const [currentPage, setCurrentPage] = useState(1);
   const tradesPerPage = 5;
@@ -170,7 +148,7 @@ export default function DashboardPage() {
   };
 
   return (
-    <>
+    <ProtectedRoute redirectMessage="Please login to access dashboard.">
       <main className="p-8 max-w-7xl mx-auto py-12">
         <h1 className="text-4xl font-bold mb-12">Dashboard</h1>
         
@@ -241,7 +219,7 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
-    </>
+    </ProtectedRoute>
   );
 }
 

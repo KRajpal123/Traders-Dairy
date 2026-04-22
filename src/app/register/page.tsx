@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { registerUser } from '@/utils/authStorage';
 
 const initialErrors = {
   email: '',
@@ -49,7 +50,19 @@ export default function RegisterPage() {
     event.preventDefault();
 
     if (validate()) {
+      const result = registerUser(email, password);
+
+      if (!result.ok) {
+        setErrors((currentErrors) => ({
+          ...currentErrors,
+          email: result.message,
+        }));
+        setSuccess('');
+        return;
+      }
+
       setErrors(initialErrors);
+      setSuccess('Account created successfully. Redirecting to login...');
       router.push('/login');
     } else {
       setSuccess('');

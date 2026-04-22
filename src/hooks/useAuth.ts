@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useMemo, useSyncExternalStore } from 'react';
 import { useRouter } from 'next/navigation';
 
 interface AuthToken {
@@ -10,56 +10,87 @@ interface AuthToken {
 
 const TOKEN_KEY = 'traders-diary-auth';
 const EXPIRY_MS = 60 * 60 * 1000; // 1 hour
+const AUTH_CHANGE_EVENT = 'traders-diary-auth-change';
+
+function parseAuthToken(token: string | null): AuthToken | null {
+  if (!token) return null;
+
+  try {
+    const parsed = JSON.parse(token) as AuthToken;
+
+    if (Date.now() - parsed.timestamp > EXPIRY_MS) {
+      return null;
+    }
+
+    return parsed;
+  } catch {
+    return null;
+  }
+}
 
 export function getAuthToken(): AuthToken | null {
   if (typeof window === 'undefined') return null;
-  try {
-    const token = localStorage.getItem(TOKEN_KEY);
-    if (!token) return null;
-    const parsed: AuthToken = JSON.parse(token);
-    if (Date.now() - parsed.timestamp > EXPIRY_MS) {
-      localStorage.removeItem(TOKEN_KEY);
-      return null;
-    }
-    return parsed;
-  } catch {
-    if (typeof window !== 'undefined') localStorage.removeItem(TOKEN_KEY);
-    return null;
-  }
+
+  return parseAuthToken(localStorage.getItem(TOKEN_KEY));
 }
 
 export function setAuthToken(email: string) {
   const token: AuthToken = { email, timestamp: Date.now() };
   localStorage.setItem(TOKEN_KEY, JSON.stringify(token));
+  window.dispatchEvent(new Event(AUTH_CHANGE_EVENT));
 }
 
 export function clearAuthToken() {
   localStorage.removeItem(TOKEN_KEY);
+  window.dispatchEvent(new Event(AUTH_CHANGE_EVENT));
+}
+
+function subscribe(callback: () => void) {
+  if (typeof window === 'undefined') {
+    return () => undefined;
+  }
+
+  window.addEventListener('storage', callback);
+  window.addEventListener(AUTH_CHANGE_EVENT, callback);
+
+  return () => {
+    window.removeEventListener('storage', callback);
+    window.removeEventListener(AUTH_CHANGE_EVENT, callback);
+  };
+}
+
+function getServerSnapshot() {
+  return null;
+}
+
+function getAuthSnapshot() {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  return localStorage.getItem(TOKEN_KEY);
 }
 
 export function useAuth() {
-  const [isLoading, setIsLoading] = useState(true);
-  const [isAuth, setIsAuth] = useState(false);
   const router = useRouter();
-
-  const checkAuth = useCallback(() => {
-    const token = getAuthToken();
-    setIsAuth(!!token);
-    setIsLoading(false);
-  }, []);
-
-  useEffect(checkAuth, [checkAuth]);
+  const tokenSnapshot = useSyncExternalStore(subscribe, getAuthSnapshot, getServerSnapshot);
+  const token = useMemo(() => parseAuthToken(tokenSnapshot), [tokenSnapshot]);
 
   const login = (email: string) => {
     setAuthToken(email);
-    setIsAuth(true);
   };
 
   const logout = () => {
     clearAuthToken();
-    setIsAuth(false);
     router.push('/login');
   };
 
-  return { isAuth, isLoading, login, logout, checkAuth };
+  return {
+    isAuth: !!token,
+    isLoading: false,
+    login,
+    logout,
+    checkAuth: getAuthToken,
+    token,
+  };
 }

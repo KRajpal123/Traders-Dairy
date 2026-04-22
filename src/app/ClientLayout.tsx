@@ -3,12 +3,10 @@
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import { useState } from 'react';
-import { getAuthToken } from '@/hooks/useAuth';
 import { TradesProvider } from '@/context/TradesContext';
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
-  const { isAuth, isLoading, logout } = useAuth();
-  const token = getAuthToken();
+  const { isAuth, isLoading, logout, token } = useAuth();
   const [showProfile, setShowProfile] = useState(false);
 
   if (isLoading) {
