@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { getAuthToken } from '@/hooks/useAuth';
+import { useTrades } from '@/context/TradesContext';
 
 export default function TradesPage() {
   const router = useRouter();
@@ -46,10 +47,11 @@ const newErrors: Record<string, string> = {};
     return Object.keys(newErrors).length === 0;
   };
 
+  const { addTrade } = useTrades();
+
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (validateForm()) {
-      // Add trade logic here
       // Calculate PnL
       const entry = Number(formData.entryPrice);
       const exit = Number(formData.exitPrice);
@@ -60,9 +62,8 @@ const newErrors: Record<string, string> = {};
       const pnlValue = directionProfit ? priceDiff * qty : - (priceDiff * qty);
       const pnlStr = (pnlValue >= 0 ? '+' : '-') + '₹' + Math.abs(pnlValue).toLocaleString();
       const isPositive = pnlValue >= 0;
-      const pointsStr = points;
       
-        const newTrade = {
+      const newTrade: Trade = {
         symbol: formData.symbol.toUpperCase(),
         action: formData.type,
         entryPrice: formData.entryPrice,
@@ -71,15 +72,11 @@ const newErrors: Record<string, string> = {};
         date: formData.date,
         notes: formData.notes,
         pnl: pnlStr,
-        points: pointsStr,
+        points: points,
         isPositive
       };
       
-      // Save to localStorage
-      const trades = JSON.parse(localStorage.getItem('trades') || '[]');
-      trades.unshift(newTrade);
-      localStorage.setItem('trades', JSON.stringify(trades.slice(0,100))); // Keep last 100
-      
+      addTrade(newTrade);
       alert('Trade added successfully!');
       // Reset form
       setFormData({

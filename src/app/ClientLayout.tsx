@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import { useState } from 'react';
 import { getAuthToken } from '@/hooks/useAuth';
+import { TradesProvider } from '@/context/TradesContext';
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   const { isAuth, isLoading, logout } = useAuth();
@@ -29,16 +30,17 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   }
 
   return (
-    <div className="min-h-full flex flex-col">
-      <header className="sticky top-0 z-50 border-b border-slate-800 bg-slate-950/95 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <Link href="/" className="text-lg font-semibold text-white transition hover:text-primary-300">
-            Trader's Diary
-          </Link>
-          <nav className="flex flex-wrap items-center gap-4 text-sm text-slate-300">
+    <TradesProvider>
+      <div className="min-h-full flex flex-col">
+        <header className="sticky top-0 z-50 border-b border-slate-800 bg-slate-950/95 backdrop-blur-xl">
+          <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+            <Link href="/" className="text-lg font-semibold text-white transition hover:text-primary-300">
+              Trader&apos;s Diary
+            </Link>
+            <nav className="flex flex-wrap items-center gap-4 text-sm text-slate-300">
               <Link href="/dashboard" className="transition hover:text-white">Dashboard</Link>
               <Link href="/trades" className="transition hover:text-white">Trades</Link>
-{isAuth ? (
+              {isAuth ? (
                 <div className="relative">
                   <button 
                     onClick={() => setShowProfile(!showProfile)}
@@ -69,10 +71,12 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
                   <Link href="/register" className="transition hover:text-white">Register</Link>
                 </>
               )}
-          </nav>
-        </div>
-      </header>
-      <main className="flex-1">{children}</main>
-    </div>
+            </nav>
+          </div>
+        </header>
+        <main className="flex-1">{children}</main>
+      </div>
+    </TradesProvider>
   );
 }
+

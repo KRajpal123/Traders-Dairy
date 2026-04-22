@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getAuthToken } from '@/hooks/useAuth';
+import { useTrades } from '@/context/TradesContext';
 
 interface Trade {
   symbol: string;
@@ -26,18 +27,13 @@ export default function DashboardPage() {
     }
   }, [router]);
 
-  const [trades, setTrades] = useState<Trade[]>([]);
+  const { trades, deleteTrade } = useTrades();
   const [currentPage, setCurrentPage] = useState(1);
   const tradesPerPage = 5;
+  const [showNotesModal, setShowNotesModal] = useState(false);
+  const [selectedNotes, setSelectedNotes] = useState('');
 
-  useEffect(() => {
-    const savedTrades = JSON.parse(localStorage.getItem('trades') || '[]');
-    setTrades(savedTrades);
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem('trades', JSON.stringify(trades));
-  }, [trades]);
+  // No need - trades read only
 
   const totalPnL = useMemo(() => {
     return trades.reduce((sum, trade) => {
@@ -56,10 +52,9 @@ export default function DashboardPage() {
     if (trades.length === 0) {
       return (
         <tr>
-          <td colSpan={6} className="p-12 text-center py-20">
+          <td colSpan={8} className="p-12 text-center py-20">
             <div className="text-slate-400">
               <p className="text-xl mb-4">No trades yet</p>
-              <p className="mb-6">Please login to check the data</p>
               <a href="/trades" className="inline-flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300">
                 Add First Trade
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -103,8 +98,7 @@ export default function DashboardPage() {
             <button
               onClick={() => {
                 if (confirm('Delete this trade?')) {
-                  const updatedTrades = trades.filter((_, i) => i !== indexOfFirstTrade + index);
-                  setTrades(updatedTrades);
+                  deleteTrade(indexOfFirstTrade + index);
                   setCurrentPage(1);
                 }
               }}
@@ -115,6 +109,25 @@ export default function DashboardPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995 -1.858L5 7m5 4v6m4 -6v6m1 -10V4a1 1 0 00-1 -1h-4a1 1 0 00-1 1v3M4 7h16" />
               </svg>
             </button>
+          </td>
+          <td className="p-6 max-w-[120px]">
+            {trade.notes ? (
+              trade.notes.length > 10 ? (
+                <span 
+                  className="text-sm text-slate-400 truncate block cursor-pointer underline hover:no-underline"
+                  onClick={() => {
+                    setSelectedNotes(trade.notes || '');
+                    setShowNotesModal(true);
+                  }}
+                >
+                  {trade.notes.slice(0, 10)}...
+                </span>
+              ) : (
+                <span className="text-sm text-slate-400">{trade.notes}</span>
+              )
+            ) : (
+              <span className="text-sm text-slate-500 italic">No notes</span>
+            )}
           </td>
         </tr>
       );
@@ -157,54 +170,78 @@ export default function DashboardPage() {
   };
 
   return (
-    <main className="p-8 max-w-7xl mx-auto py-12">
-      <h1 className="text-4xl font-bold mb-12">Dashboard</h1>
-      
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-        <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-800/50 rounded-2xl p-8 text-center hover:bg-slate-900/70 transition-all duration-300 hover:-translate-y-1">
-          <div className={`text-3xl font-bold mb-2 ${totalPnL >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-            {(totalPnL >= 0 ? '+' : '-') + Math.abs(totalPnL).toLocaleString()} ₹
+    <>
+      <main className="p-8 max-w-7xl mx-auto py-12">
+        <h1 className="text-4xl font-bold mb-12">Dashboard</h1>
+        
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+          <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-800/50 rounded-2xl p-8 text-center hover:bg-slate-900/70 transition-all duration-300 hover:-translate-y-1">
+            <div className={`text-3xl font-bold mb-2 ${totalPnL >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+              {(totalPnL >= 0 ? '+' : '-') + Math.abs(totalPnL).toLocaleString()} ₹
+            </div>
+            <div className="text-sm text-slate-400 uppercase tracking-wide">Total PnL</div>
           </div>
-          <div className="text-sm text-slate-400 uppercase tracking-wide">Total PnL</div>
+          <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-800/50 rounded-2xl p-8 text-center hover:bg-slate-900/70 transition-all duration-300 hover:-translate-y-1">
+            <div className="text-3xl font-bold text-emerald-400 mb-2">{winRate.toFixed(1)}%</div>
+            <div className="text-sm text-slate-400 uppercase tracking-wide">Win Rate</div>
+          </div>
+          <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-800/50 rounded-2xl p-8 text-center hover:bg-slate-900/70 transition-all duration-300 hover:-translate-y-1">
+            <div className="text-3xl font-bold text-slate-300 mb-2">{trades.length}</div>
+            <div className="text-sm text-slate-400 uppercase tracking-wide">Total Trades</div>
+          </div>
         </div>
-        <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-800/50 rounded-2xl p-8 text-center hover:bg-slate-900/70 transition-all duration-300 hover:-translate-y-1">
-          <div className="text-3xl font-bold text-emerald-400 mb-2">{winRate.toFixed(1)}%</div>
-          <div className="text-sm text-slate-400 uppercase tracking-wide">Win Rate</div>
+        
+        {/* Recent Trades */}
+        <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-800/50 rounded-3xl overflow-hidden">
+          <div className="p-8 border-b border-slate-800/50">
+            <h2 className="text-2xl font-bold">Recent Trades</h2>
+            <p className="text-slate-500 mt-1">Your latest trading activity</p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-slate-800/50">
+                  <th className="text-left p-6 font-semibold text-slate-300 pb-4">Date</th>
+                  <th className="text-left p-6 font-semibold text-slate-300 pb-4">Symbol</th>
+                  <th className="text-left p-6 font-semibold text-slate-300 pb-4">Action</th>
+                  <th className="text-left p-6 font-semibold text-slate-300 pb-4">Points</th>
+                  <th className="text-left p-6 font-semibold text-slate-300 pb-4">Qty</th>
+                  <th className="text-left p-6 font-semibold text-slate-300 pb-4">P&L</th>
+                  <th className="text-left p-6 font-semibold text-slate-300 pb-4 w-16">Actions</th>
+                  <th className="text-left p-6 font-semibold text-slate-300 pb-4 min-w-[120px]">Notes</th>
+                </tr>
+              </thead>
+              <tbody>
+                {renderTrades()}
+              </tbody>
+            </table>
+          </div>
+          {renderPagination()}
         </div>
-        <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-800/50 rounded-2xl p-8 text-center hover:bg-slate-900/70 transition-all duration-300 hover:-translate-y-1">
-          <div className="text-3xl font-bold text-slate-300 mb-2">{trades.length}</div>
-          <div className="text-sm text-slate-400 uppercase tracking-wide">Total Trades</div>
-        </div>
-      </div>
+      </main>
       
-      {/* Recent Trades */}
-      <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-800/50 rounded-3xl overflow-hidden">
-        <div className="p-8 border-b border-slate-800/50">
-          <h2 className="text-2xl font-bold">Recent Trades</h2>
-          <p className="text-slate-500 mt-1">Your latest trading activity</p>
+      {showNotesModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[1000] flex items-center justify-center p-4" onClick={() => setShowNotesModal(false)}>
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-md max-h-[80vh] overflow-auto mx-4" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-white">Trade Notes</h3>
+              <button 
+                onClick={() => setShowNotesModal(false)}
+                className="p-1 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-all"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="text-slate-200 whitespace-pre-wrap max-h-64 overflow-auto pr-2">
+              {selectedNotes}
+            </div>
+          </div>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-slate-800/50">
-                <th className="text-left p-6 font-semibold text-slate-300 pb-4">Date</th>
-                <th className="text-left p-6 font-semibold text-slate-300 pb-4">Symbol</th>
-                <th className="text-left p-6 font-semibold text-slate-300 pb-4">Action</th>
-                <th className="text-left p-6 font-semibold text-slate-300 pb-4">Points</th>
-                <th className="text-left p-6 font-semibold text-slate-300 pb-4">Qty</th>
-                <th className="text-left p-6 font-semibold text-slate-300 pb-4">P&L</th>
-                <th className="text-left p-6 font-semibold text-slate-300 pb-4 w-16">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {renderTrades()}
-            </tbody>
-          </table>
-        </div>
-        {renderPagination()}
-      </div>
-    </main>
+      )}
+    </>
   );
 }
 

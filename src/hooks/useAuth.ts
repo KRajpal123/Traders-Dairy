@@ -12,6 +12,7 @@ const TOKEN_KEY = 'traders-diary-auth';
 const EXPIRY_MS = 60 * 60 * 1000; // 1 hour
 
 export function getAuthToken(): AuthToken | null {
+  if (typeof window === 'undefined') return null;
   try {
     const token = localStorage.getItem(TOKEN_KEY);
     if (!token) return null;
@@ -22,7 +23,7 @@ export function getAuthToken(): AuthToken | null {
     }
     return parsed;
   } catch {
-    localStorage.removeItem(TOKEN_KEY);
+    if (typeof window !== 'undefined') localStorage.removeItem(TOKEN_KEY);
     return null;
   }
 }
