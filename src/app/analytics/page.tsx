@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import {
   Bar,
   BarChart,
@@ -16,6 +16,8 @@ import {
 } from 'recharts';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useTrades } from '@/context/TradesContext';
+
+type AnalyticsRange = '7d' | '30d' | '90d' | 'all';
 
 function parsePnLValue(pnl: string) {
   return Number(pnl.replace(/[^0-9.-]/g, '')) || 0;
@@ -41,6 +43,27 @@ function formatMonthLabel(date: Date) {
     month: 'short',
     year: 'numeric',
   }).format(date);
+}
+
+function isTradeInRange(dateString: string, range: AnalyticsRange) {
+  if (range === 'all') {
+    return true;
+  }
+
+  const date = new Date(`${dateString}T00:00:00`);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const daysMap: Record<Exclude<AnalyticsRange, 'all'>, number> = {
+    '7d': 7,
+    '30d': 30,
+    '90d': 90,
+  };
+
+  const startDate = new Date(today);
+  startDate.setDate(today.getDate() - (daysMap[range] - 1));
+
+  return date >= startDate && date <= today;
 }
 
 function getWeekKey(dateString: string) {
@@ -95,6 +118,12 @@ function SectionCard({
 
 export default function AnalyticsPage() {
   const { trades } = useTrades();
+  const [selectedRange, setSelectedRange] = useState<AnalyticsRange>('all');
+
+  const filteredTrades = useMemo(
+    () => trades.filter((trade) => isTradeInRange(trade.date, selectedRange)),
+    [selectedRange, trades]
+  );
 
   const analytics = useMemo(() => {
     const dailyMap = new Map<string, number>();
@@ -110,7 +139,7 @@ export default function AnalyticsPage() {
     let grossProfit = 0;
     let grossLoss = 0;
 
-    for (const trade of trades) {
+    for (const trade of filteredTrades) {
       const pnlValue = parsePnLValue(trade.pnl);
       totalPnL += pnlValue;
       bestTrade = Math.max(bestTrade, pnlValue);
@@ -165,7 +194,7 @@ export default function AnalyticsPage() {
       .slice(0, 5);
 
     const profitFactor = grossLoss === 0 ? grossProfit : grossProfit / grossLoss;
-    const averageTrade = trades.length ? totalPnL / trades.length : 0;
+    const averageTrade = filteredTrades.length ? totalPnL / filteredTrades.length : 0;
 
     return {
       dailyData,
@@ -174,18 +203,25 @@ export default function AnalyticsPage() {
       topSymbols,
       totalPnL,
       averageTrade,
-      bestTrade: trades.length ? bestTrade : 0,
-      worstTrade: trades.length ? worstTrade : 0,
+      bestTrade: filteredTrades.length ? bestTrade : 0,
+      worstTrade: filteredTrades.length ? worstTrade : 0,
       wins,
       losses,
       profitFactor,
     };
-  }, [trades]);
+  }, [filteredTrades]);
 
   const winLossData = [
     { name: 'Wins', value: analytics.wins, color: '#22c55e' },
     { name: 'Losses', value: analytics.losses, color: '#ef4444' },
   ].filter((entry) => entry.value > 0);
+
+  const rangeOptions: Array<{ value: AnalyticsRange; label: string }> = [
+    { value: '7d', label: 'Last 7 Days' },
+    { value: '30d', label: 'Last 30 Days' },
+    { value: '90d', label: 'Last 90 Days' },
+    { value: 'all', label: 'All Time' },
+  ];
 
   return (
     <ProtectedRoute redirectMessage="Please login to access analytics.">
@@ -212,6 +248,32 @@ export default function AnalyticsPage() {
           <EmptyAnalyticsState />
         ) : (
           <div className="space-y-8">
+            <section className="flex flex-wrap gap-3">
+              {rangeOptions.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => setSelectedRange(option.value)}
+                  className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
+                    selectedRange === option.value
+                      ? 'border-primary-500 bg-primary-500 text-white'
+                      : 'border-slate-700 bg-slate-900/60 text-slate-300 hover:border-primary-500 hover:text-white'
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </section>
+
+            {filteredTrades.length === 0 ? (
+              <div className="rounded-[2rem] border border-dashed border-slate-700 bg-slate-900/60 p-10 text-center">
+                <h2 className="text-2xl font-semibold text-white">No trades in this time range</h2>
+                <p className="mx-auto mt-3 max-w-2xl text-slate-400">
+                  Try a wider filter like last 90 days or all time to view analytics for your stored trades.
+                </p>
+              </div>
+            ) : (
+              <>
             <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
               <div className="rounded-[1.75rem] border border-slate-800 bg-slate-900/70 p-6">
                 <p className="text-sm text-slate-400">Total P&amp;L</p>
@@ -246,7 +308,7 @@ export default function AnalyticsPage() {
                     <BarChart data={analytics.dailyData}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
                       <XAxis dataKey="label" stroke="#94a3b8" />
-                      <YAxis stroke="#94a3b8" />
+                      <YAxis stroke="#94a3b8" tick={{ fill: '#cbd5e1' }} />
                       <Tooltip
                         contentStyle={{ background: '#020617', border: '1px solid #334155', borderRadius: 16 }}
                         formatter={(value: number) => formatCurrency(value)}
@@ -267,7 +329,7 @@ export default function AnalyticsPage() {
                     <BarChart data={analytics.weeklyData}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
                       <XAxis dataKey="label" stroke="#94a3b8" />
-                      <YAxis stroke="#94a3b8" />
+                      <YAxis stroke="#94a3b8" tick={{ fill: '#cbd5e1' }} />
                       <Tooltip
                         contentStyle={{ background: '#020617', border: '1px solid #334155', borderRadius: 16 }}
                         formatter={(value: number) => formatCurrency(value)}
@@ -290,7 +352,7 @@ export default function AnalyticsPage() {
                     <BarChart data={analytics.monthlyData}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
                       <XAxis dataKey="label" stroke="#94a3b8" />
-                      <YAxis stroke="#94a3b8" />
+                      <YAxis stroke="#94a3b8" tick={{ fill: '#cbd5e1' }} />
                       <Tooltip
                         contentStyle={{ background: '#020617', border: '1px solid #334155', borderRadius: 16 }}
                         formatter={(value: number) => formatCurrency(value)}
@@ -353,6 +415,8 @@ export default function AnalyticsPage() {
                 ))}
               </div>
             </SectionCard>
+              </>
+            )}
           </div>
         )}
       </main>
